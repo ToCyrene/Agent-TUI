@@ -1,0 +1,37 @@
+# 依赖目录
+node_modules/
+jspm_packages/
+.pnpm-store/
+
+# 构建产物
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# 日志与缓存
+*.log
+.cache/
+.npm/
+.eslintcache
+
+# 版本控制与环境
+.git/
+.svn/
+.env
+.env.*
+!.env.example
+
+# 二进制文件与媒体
+*.exe
+*.dll
+*.so
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.pdf
+*.zip
+*.tar.gz

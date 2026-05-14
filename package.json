@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "ink": "^7.0.3",
+    "react": "^19.2.6"
+  },
+  "name": "agent-tui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ToCyrene/Agent-TUI.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ToCyrene/Agent-TUI/issues"
+  },
+  "homepage": "https://github.com/ToCyrene/Agent-TUI#readme"
+}
