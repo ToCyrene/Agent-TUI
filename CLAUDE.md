@@ -145,4 +145,4 @@ npx vitest
 - 单元测试：`tools/` 下每个工具配备 `*.test.js`
 - API 层：Mock 内置 `fetch`，验证流式解析和工具调用逻辑
 - 组件测试：`ink-testing-library` 验证 Ink 组件渲染输出
-- .env包含了模型API信息，可用于测试
+- .env包含了模型API信息(URL,api-key,model)，可用于测试
