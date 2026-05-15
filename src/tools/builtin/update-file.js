@@ -59,7 +59,7 @@ function buildDiff({ contextBefore, oldLines, newLines, contextAfter, startLine 
   // context before — no \ marker, no -/+
   for (const ctx of contextBefore) {
     const num = String(ctx.lineNum).padStart(width);
-    result.push(`  ${num}  ${ctx.content}`);
+    result.push(`  ${num}    ${ctx.content}`);
   }
 
   // removed lines — first one gets \ marker, rest aligned
@@ -70,21 +70,18 @@ function buildDiff({ contextBefore, oldLines, newLines, contextAfter, startLine 
     result.push(`${prefix}${num} -  ${oldLines[i]}`);
   }
 
-  // added lines — padded to align with - content
-  const pad = ' '.repeat(width + 4);
+  // added lines — same alignment as - lines
   for (let i = 0; i < newLines.length; i++) {
     const num = String(startLine + i).padStart(width);
-    if (oldLines.length === 0 && i === 0) {
-      result.push(`\\ ${pad}${num} +  ${newLines[i]}`);
-    } else {
-      result.push(`${pad}${num} +  ${newLines[i]}`);
-    }
+    const isFirstChange = oldLines.length === 0 && i === 0;
+    const prefix = isFirstChange ? '\\ ' : '  ';
+    result.push(`${prefix}${num} +  ${newLines[i]}`);
   }
 
   // context after — no marker
   for (const ctx of contextAfter) {
     const num = String(ctx.lineNum).padStart(width);
-    result.push(`  ${num}  ${ctx.content}`);
+    result.push(`  ${num}    ${ctx.content}`);
   }
 
   return result.join('\n');

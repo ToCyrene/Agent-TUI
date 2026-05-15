@@ -20,7 +20,7 @@ function Message({ role, content, tool_calls, tool_call_id }) {
 
   if (role === 'tool') {
     const truncated = truncateLines(content);
-    if (truncated && truncated.startsWith('\\ ')) {
+    if (truncated && /\d [-+]  /.test(truncated)) {
       return <DiffView content={truncated} />;
     }
     return <Text dimColor>{truncated}</Text>;
