@@ -31,6 +31,7 @@ src/
     index.js           - 汇总导出
     server.js          - API 配置（baseURL、model、apiKey）
     tools.js           - 工具运行时配置（超时、权限、限制）
+    model.js           - Token 估算参数与格式开销
   utils/               - 公共工具
     logger.js          - 日志工具
 ```
