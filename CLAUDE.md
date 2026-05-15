@@ -27,8 +27,11 @@ src/
   api/                 - API 通信层（手动实现）
     client.js          - HTTP 请求构造与发送（基于 Node.js v24 内置 fetch）
     stream.js          - SSE 流式响应解析器
+  config/              - 全局配置（动态可修改）
+    index.js           - 汇总导出
+    server.js          - API 配置（baseURL、model、apiKey）
+    tools.js           - 工具运行时配置（超时、权限、限制）
   utils/               - 公共工具
-    config.js          - 环境变量读取与校验
     logger.js          - 日志工具
 ```
 

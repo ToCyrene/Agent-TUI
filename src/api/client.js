@@ -1,18 +1,18 @@
-import config from '../utils/config.js';
+import { server } from '../config/index.js';
 
 export async function chatCompletion({ messages, tools, stream = true }) {
   const body = {
-    model: config.model,
+    model: server.model,
     messages,
     stream,
   };
   if (tools) body.tools = tools;
 
-  const response = await fetch(`${config.baseURL}/chat/completions`, {
+  const response = await fetch(`${server.baseURL}/chat/completions`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${config.apiKey}`,
+      Authorization: `Bearer ${server.apiKey}`,
     },
     body: JSON.stringify(body),
   });
