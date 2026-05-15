@@ -6,7 +6,7 @@ import { initialState, reducer, Action } from '../src/core/state.js';
 // ══════════════════════════════════════════════
 describe('state reducer', () => {
   it('initial state', () => {
-    expect(initialState).toEqual({ messages: [], streaming: false, error: null });
+    expect(initialState).toEqual({ messages: [], streaming: false, error: null, connected: false });
   });
 
   it('ADD_USER_MESSAGE', () => {

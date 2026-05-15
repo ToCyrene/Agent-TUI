@@ -6,6 +6,7 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 temp.sh
+workdir/
 
 # --- 执行文件与二进制文件 ---
 # 忽略所有操作系统生成的二进制文件

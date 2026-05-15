@@ -7,16 +7,17 @@
   "name": "agent-tui",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.js",
+  "main": "src/index.jsx",
   "devDependencies": {
+    "tsx": "^4.22.0",
     "vitest": "^4.1.6"
   },
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "node --watch src/index.js",
+    "start": "node --env-file=.env --import tsx src/index.jsx",
+    "dev": "node --env-file=.env --watch --import tsx src/index.jsx",
     "test": "vitest run",
     "test:watch": "vitest"
   },

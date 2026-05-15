@@ -3,6 +3,7 @@ import { streamChatCompletion } from '../api/stream.js';
 import registry from '../tools/registry.js';
 import { model } from '../config/index.js';
 import { Action } from './state.js';
+import { trimMessages } from './conversation.js';
 
 function mergeToolCalls(map, deltas) {
   for (const delta of deltas) {
@@ -33,8 +34,13 @@ export async function runAgent({ dispatch, getState }) {
 
     try {
       const { messages } = getState();
+      const trimmed = trimMessages(messages, model.maxContextTokens);
       const tools = registry.definitions();
-      const response = await chatCompletion({ messages, tools, stream: true });
+      const response = await chatCompletion({
+        messages: trimmed,
+        tools: tools.length > 0 ? tools : undefined,
+        stream: true,
+      });
       dispatch({ type: Action.START_STREAM });
 
       const toolCallsByIndex = new Map();
@@ -60,6 +66,7 @@ export async function runAgent({ dispatch, getState }) {
       if (finishReason === 'tool_calls') {
         const completedToolCalls = Array.from(toolCallsByIndex.values());
         dispatch({ type: Action.SET_TOOL_CALLS, toolCalls: completedToolCalls });
+        dispatch({ type: Action.FINISH_STREAM });
 
         for (const tc of completedToolCalls) {
           let args = {};
@@ -82,7 +89,7 @@ export async function runAgent({ dispatch, getState }) {
       dispatch({ type: Action.FINISH_STREAM });
       return;
     } catch (err) {
-      dispatch({ type: Action.SET_ERROR, error: err.message });
+      dispatch({ type: Action.SET_ERROR, error: err.message || String(err) });
       return;
     }
   }

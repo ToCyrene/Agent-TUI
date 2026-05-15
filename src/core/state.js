@@ -2,6 +2,7 @@ export const initialState = {
   messages: [],
   streaming: false,
   error: null,
+  connected: false,
 };
 
 export const Action = {
@@ -13,6 +14,7 @@ export const Action = {
   ADD_TOOL_RESULT: 'ADD_TOOL_RESULT',
   SET_ERROR: 'SET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR',
+  CONNECTED: 'CONNECTED',
 };
 
 export function reducer(state, action) {
@@ -50,7 +52,7 @@ export function reducer(state, action) {
     }
 
     case Action.FINISH_STREAM:
-      return { ...state, streaming: false };
+      return { ...state, streaming: false, connected: true };
 
     case Action.ADD_TOOL_RESULT:
       return {
@@ -66,6 +68,9 @@ export function reducer(state, action) {
 
     case Action.CLEAR_ERROR:
       return { ...state, error: null };
+
+    case Action.CONNECTED:
+      return { ...state, connected: true };
 
     default:
       return state;
