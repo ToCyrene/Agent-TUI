@@ -5,7 +5,7 @@ import { defineTool } from '../schema.js';
 
 export const definition = defineTool({
   name: 'write_file',
-  description: 'Write content to a file. Creates parent directories if needed.',
+  description: 'Create a new file or overwrite a file entirely. Do NOT use for editing parts of an existing file — use update_file for that.',
   parameters: {
     properties: {
       path: {

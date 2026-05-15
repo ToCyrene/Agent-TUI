@@ -68,7 +68,20 @@ export async function runAgent({ dispatch, getState }) {
         dispatch({ type: Action.SET_TOOL_CALLS, toolCalls: completedToolCalls });
         dispatch({ type: Action.FINISH_STREAM });
 
+        const executedCalls = new Set();
+
         for (const tc of completedToolCalls) {
+          const callKey = `${tc.function.name}:${tc.function.arguments}`;
+          if (executedCalls.has(callKey)) {
+            dispatch({
+              type: Action.ADD_TOOL_RESULT,
+              toolCallId: tc.id,
+              content: `Error: duplicate tool call '${tc.function.name}' with same arguments. Try a different approach.`,
+            });
+            continue;
+          }
+          executedCalls.add(callKey);
+
           let args = {};
           try {
             args = JSON.parse(tc.function.arguments);
