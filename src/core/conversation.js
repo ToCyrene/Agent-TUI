@@ -28,17 +28,24 @@ function messagesTokenCount(messages) {
 
 function trimMessages(messages, maxTokens) {
   let total = messagesTokenCount(messages);
-  const removed = new Set();
-  for (let i = 0; i < messages.length && total > maxTokens; i++) {
-    if (messages[i].role === 'system') continue;
-    total -= messageOverhead(messages[i]);
-    total -= estimateTokens(messages[i].content);
-    if (messages[i].tool_calls) {
-      total -= estimateTokens(JSON.stringify(messages[i].tool_calls));
+  const result = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    if (msg.role === 'system') {
+      result.push(msg);
+      continue;
     }
-    removed.add(i);
+    if (total <= maxTokens) {
+      result.push(msg);
+    } else {
+      total -= messageOverhead(msg);
+      total -= estimateTokens(msg.content);
+      if (msg.tool_calls) {
+        total -= estimateTokens(JSON.stringify(msg.tool_calls));
+      }
+    }
   }
-  return messages.filter((_, i) => !removed.has(i));
+  return result;
 }
 
 export { estimateTokens, messagesTokenCount, trimMessages };
