@@ -16,6 +16,7 @@ src/
     Input.jsx          - 底部输入区，处理用户键入
     StatusBar.jsx      - 状态栏（连接状态、模型、token 消耗）
     ToolCallCard.jsx   - 工具调用的卡片展示
+    DiffView.jsx       - update_file diff 红绿配色
   core/                - Agent 核心逻辑
     agent.js           - Agent 编排：用户输入 → 调用 API → 处理 tool calls → 生成回复
     conversation.js    - 对话状态：消息历史、token 计数、上下文窗口管理
@@ -23,7 +24,7 @@ src/
   tools/               - 工具层
     registry.js        - 工具注册表：注册、查找、执行
     schema.js          - 工具 JSON Schema 定义（OpenAI function calling 格式）
-    builtin/           - 内置工具实现
+    builtin/           - 内置工具（read_file, write_file, run_command, update_file）
   api/                 - API 通信层（手动实现）
     client.js          - HTTP 请求构造与发送（基于 Node.js v24 内置 fetch）
     stream.js          - SSE 流式响应解析器
@@ -92,10 +93,11 @@ npx vitest
 
 ### 工具层 (`src/tools/`)
 
-- 每个工具定义三个要素：`name`（唯一标识）、`description`（LLM 理解用途）、`parameters`（JSON Schema）
+- 每个工具：`name`、`description`（引导 LLM 正确选用）、`parameters`（JSON Schema）
 - 工具实现为纯函数：`async (args: object) => string`
-- `registry.js` 提供 `register(tool)` 和 `execute(name, args)` 方法
-- 工具执行必须：设置超时、捕获异常返回错误文本（不阻断 Agent 循环）、限制工作目录
+- `registry.js` 提供 `register(tool)` 和 `execute(name, args)`
+- `write_file` 用于新建或全量覆盖；`update_file` 用于局部编辑（行号定位，原子写入，返回 diff）
+- 工具执行必须：超时、异常返回错误文本（不阻断 Agent 循环）、限制工作目录
 
 ### 通信层 (`src/api/`)
 
