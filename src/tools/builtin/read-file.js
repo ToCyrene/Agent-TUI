@@ -6,7 +6,7 @@ import { isBinaryFile } from 'isbinaryfile';
 
 export const definition = defineTool({
   name: 'read_file',
-  description: 'Read the contents of a file. Returns the file content as text.',
+  description: 'Read the contents of a file. Returns content with line numbers (format: "LINE | CONTENT"). When editing this file, you MUST use these line numbers with update_file.',
   parameters: {
     properties: {
       path: {
@@ -42,10 +42,37 @@ export async function handler({ path: filePath }) {
 
   try {
     const content = await fs.readFile(resolved, 'utf-8');
-    if (content.length > tools.readMaxBytes) {
-      return content.slice(0, tools.readMaxBytes) + '\n…[truncated]';
+    const allLines = content.split('\n');
+    const totalLines = allLines.length;
+
+    const outLines = [];
+    let bytes = 0;
+    let truncated = false;
+    for (const line of allLines) {
+      const lineBytes = Buffer.byteLength(line, 'utf-8') + 1;
+      if (bytes + lineBytes > tools.readMaxBytes) {
+        truncated = true;
+        break;
+      }
+      outLines.push(line);
+      bytes += lineBytes;
     }
-    return content;
+
+    if (outLines.length === 0) {
+      if (truncated) return `…[truncated: 0 of ${totalLines} lines]`;
+      return '';
+    }
+
+    const width = String(outLines.length).length;
+    const numbered = outLines.map((line, i) => {
+      const num = String(i + 1).padStart(width);
+      return `${num} | ${line}`;
+    }).join('\n');
+
+    if (truncated) {
+      return numbered + `\n…[truncated: ${outLines.length} of ${totalLines} lines]`;
+    }
+    return numbered;
   } catch (err) {
     return `Error: ${err.message}`;
   }

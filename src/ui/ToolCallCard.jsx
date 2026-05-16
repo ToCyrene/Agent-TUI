@@ -38,7 +38,7 @@ function parseArgs(raw) {
 
 function ToolCallCard({ id, name, arguments: rawArgs }) {
   const { inline, body } = parseArgs(rawArgs);
-  const truncatedBody = truncateLines(body);
+  const truncatedBody = name === 'update_file' ? null : truncateLines(body);
 
   return (
     <Box flexDirection="column" marginY={1}>

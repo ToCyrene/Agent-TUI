@@ -19,6 +19,26 @@ function Message({ role, content, tool_calls, tool_call_id }) {
   }
 
   if (role === 'tool') {
+    // update_file: stats + window + --- + diff
+    const statsMatch = content && content.match(/^(\d+ edits applied|Replaced|Inserted|Deleted|Appended) .+\n\n/);
+    if (statsMatch) {
+      const statsText = statsMatch[0].trim();
+      const sepIdx = content.indexOf('\n---\n');
+      if (sepIdx !== -1) {
+        const diffContent = content.slice(sepIdx + 5);
+        const diffLines = diffContent ? diffContent.split('\n').length : 0;
+        if (diffLines > 0 && diffLines <= tools.maxDiffLines) {
+          return (
+            <Box flexDirection="column">
+              <Text>{statsText}</Text>
+              <DiffView content={diffContent} />
+            </Box>
+          );
+        }
+      }
+      return <Text>{statsText}</Text>;
+    }
+
     const truncated = truncateLines(content);
     if (truncated && /\d [-+]  /.test(truncated)) {
       return <DiffView content={truncated} />;

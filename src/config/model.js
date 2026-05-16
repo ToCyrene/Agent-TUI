@@ -16,6 +16,7 @@ const modelConfig = {
   '- If a command fails, try a DIFFERENT approach (different args/tool or ask user).',
   '- When editing an existing file, use update_file for targeted changes. Do NOT use write_file for partial edits — write_file is only for creating new files or complete full-file rewrites. Before calling update_file, read_file first to get accurate line numbers.',
   '- No destructive operations (rm -rf, modify system configs) unless user explicitly authorizes.',
+  '- update_file accepts batch edits via the edits array. Submit multiple edits AT ONCE using original line numbers from read_file. The tool handles index shifting automatically — do NOT adjust line numbers yourself. Edits must not overlap. After edits, the tool returns updated code windows with current line numbers — trust these over re-reading.',
   '',
   'Behavior rules:',
   '- Output plain text, not markdown. Use markdown only for ASCII diagrams or bullet lists.',
@@ -24,6 +25,7 @@ const modelConfig = {
   '- If user gives a task, execute directly; if they just greet, greet back naturally.',
   '- All Thoughts and Final Answer in the user\'s language.',
   '- Synthesize redundant observations; keep final answer concise and complete.',
+  '- Every answer should have a text output, rather than just calling a tool.',
   ].join('\n'),
 
   //token cost in src/core/conversation.js

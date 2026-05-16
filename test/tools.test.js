@@ -105,7 +105,7 @@ describe('read_file', () => {
   it('reads a file', async () => {
     await fs.writeFile(path.join(tmpDir, 'hello.txt'), 'hello world');
     const result = await readFile.handler({ path: 'hello.txt' });
-    expect(result).toBe('hello world');
+    expect(result).toBe('1 | hello world');
   });
 
   it('blocks .env', async () => {
@@ -124,11 +124,31 @@ describe('read_file', () => {
     expect(result).toContain('Error');
   });
 
-  it('truncates large files', async () => {
-    tools.readMaxBytes = 10;
-    await fs.writeFile(path.join(tmpDir, 'big.txt'), 'x'.repeat(500));
+  it('truncates by lines and reports total line count', async () => {
+    tools.readMaxBytes = 15;
+    const lines = ['short', 'this line is too long', 'also too long here'];
+    await fs.writeFile(path.join(tmpDir, 'big.txt'), lines.join('\n'));
     const result = await readFile.handler({ path: 'big.txt' });
-    expect(result).toContain('[truncated]');
+    expect(result).toContain('1 | short');
+    expect(result).toContain('[truncated: 1 of 3 lines]');
+  });
+
+  it('numbers lines with right-aligned padding', async () => {
+    await fs.writeFile(path.join(tmpDir, 'multi.txt'), 'a\nbb\nccc\ndddd\neeeee\nffffff\nggggggg\nhhhhhhhh\niiiiiiiii\njjjjjjjjjj');
+    const result = await readFile.handler({ path: 'multi.txt' });
+    const expected = [
+      ' 1 | a',
+      ' 2 | bb',
+      ' 3 | ccc',
+      ' 4 | dddd',
+      ' 5 | eeeee',
+      ' 6 | ffffff',
+      ' 7 | ggggggg',
+      ' 8 | hhhhhhhh',
+      ' 9 | iiiiiiiii',
+      '10 | jjjjjjjjjj',
+    ].join('\n');
+    expect(result).toBe(expected);
   });
 });
 
@@ -138,7 +158,7 @@ import * as writeFile from '../src/tools/builtin/write-file.js';
 describe('write_file', () => {
   it('writes a file', async () => {
     const result = await writeFile.handler({ path: 'out.txt', content: 'data' });
-    expect(result).toContain('File written');
+    expect(result).toContain('Wrote 1 lines');
     expect(await fs.readFile(path.join(tmpDir, 'out.txt'), 'utf-8')).toBe('data');
   });
 
@@ -150,6 +170,77 @@ describe('write_file', () => {
   it('blocks path outside workDir', async () => {
     const result = await writeFile.handler({ path: '/etc/hacked', content: 'bad' });
     expect(result).toContain('access denied');
+  });
+
+  it('blocks overwriting files with >50 lines', async () => {
+    const lines = Array.from({ length: 51 }, (_, i) => `line ${i}`);
+    await fs.writeFile(path.join(tmpDir, 'large.txt'), lines.join('\n'));
+    const result = await writeFile.handler({ path: 'large.txt', content: 'new' });
+    expect(result).toContain('Use update_file');
+  });
+});
+
+// ── update_file ──
+import * as updateFile from '../src/tools/builtin/update-file.js';
+
+describe('update_file', () => {
+  it('single replace', async () => {
+    await fs.writeFile(path.join(tmpDir, 'f.txt'), 'a\nb\nc\nd\ne\n');
+    const result = await updateFile.handler({ path: 'f.txt', operation: 'replace', start_line: 2, end_line: 4, content: 'x\ny\nz' });
+    expect(result).toContain('Replaced lines 2-4');
+    expect(result).toContain('---');
+    const content = await fs.readFile(path.join(tmpDir, 'f.txt'), 'utf-8');
+    expect(content).toBe('a\nx\ny\nz\ne\n');
+  });
+
+  it('batch edits with index shifting', async () => {
+    await fs.writeFile(path.join(tmpDir, 'f.txt'), '1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n');
+    // Replace line 8-9, then insert at line 3 — both use original line numbers
+    const result = await updateFile.handler({
+      path: 'f.txt',
+      edits: [
+        { operation: 'replace', start_line: 8, end_line: 9, content: 'eight\nnine' },
+        { operation: 'insert', start_line: 3, content: 'inserted' },
+      ],
+    });
+    expect(result).toContain('2 edits applied');
+    expect(result).toContain('--- edit 1/2');
+    expect(result).toContain('--- edit 2/2');
+    expect(result).not.toContain('Error');
+    const content = await fs.readFile(path.join(tmpDir, 'f.txt'), 'utf-8');
+    expect(content).toBe('1\n2\n3\ninserted\n4\n5\n6\n7\neight\nnine\n10\n');
+  });
+
+  it('rejects overlapping edits', async () => {
+    await fs.writeFile(path.join(tmpDir, 'f.txt'), '1\n2\n3\n4\n5\n');
+    const result = await updateFile.handler({
+      path: 'f.txt',
+      edits: [
+        { operation: 'replace', start_line: 2, end_line: 4, content: 'x' },
+        { operation: 'insert', start_line: 3, content: 'y' },
+      ],
+    });
+    expect(result).toContain('overlapping');
+  });
+
+  it('rejects multiple appends', async () => {
+    await fs.writeFile(path.join(tmpDir, 'f.txt'), '1\n2\n');
+    const result = await updateFile.handler({
+      path: 'f.txt',
+      edits: [
+        { operation: 'append', content: 'a' },
+        { operation: 'append', content: 'b' },
+      ],
+    });
+    expect(result).toContain('at most one append');
+  });
+
+  it('backward compatible single op signature', async () => {
+    await fs.writeFile(path.join(tmpDir, 'f.txt'), 'a\nb\nc\n');
+    const result = await updateFile.handler({ path: 'f.txt', operation: 'insert', start_line: 0, content: 'before' });
+    expect(result).toContain('Inserted 1 lines at line 0');
+    const content = await fs.readFile(path.join(tmpDir, 'f.txt'), 'utf-8');
+    expect(content).toBe('before\na\nb\nc\n');
   });
 });
 

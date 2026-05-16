@@ -5,7 +5,7 @@ import { defineTool } from '../schema.js';
 
 export const definition = defineTool({
   name: 'write_file',
-  description: 'Create a new file or overwrite a file entirely. Do NOT use for editing parts of an existing file — use update_file for that.',
+  description: 'Create a new file or overwrite an existing small file. For files with >50 existing lines, overwriting is blocked — use update_file for targeted edits instead.',
   parameters: {
     properties: {
       path: {
@@ -30,9 +30,22 @@ export async function handler({ path: filePath, content }) {
   }
 
   try {
+    let existingLines = 0;
+    try {
+      const existing = await fs.readFile(resolved, 'utf-8');
+      existingLines = existing.split('\n').length;
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+
+    if (existingLines > tools.writeMaxExistingLines) {
+      return `Error: file has ${existingLines} lines (limit ${tools.writeMaxExistingLines}). Use update_file for targeted edits instead of overwriting a large file.`;
+    }
+
     await fs.mkdir(path.dirname(resolved), { recursive: true });
     await fs.writeFile(resolved, content, 'utf-8');
-    return `File written: ${path.relative(root, resolved)}`;
+    const totalLines = content.split('\n').length;
+    return `Wrote ${totalLines} lines: ${path.relative(root, resolved)}`;
   } catch (err) {
     return `Error: ${err.message}`;
   }
