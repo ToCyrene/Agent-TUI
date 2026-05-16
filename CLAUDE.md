@@ -96,7 +96,7 @@ npx vitest
 - 每个工具：`name`、`description`（引导 LLM 正确选用）、`parameters`（JSON Schema）
 - 工具实现为纯函数：`async (args: object) => string`
 - `registry.js` 提供 `register(tool)` 和 `execute(name, args)`
-- `write_file` 用于新建或全量覆盖；`update_file` 用于局部编辑（行号定位，原子写入，返回 diff）
+- `read_file` 返回行号标注（`行号 | 内容`）；`write_file` 覆写超 50 行禁止；`update_file` 支持 edits 数组批量编辑，自动倒序处理与索引偏移，返回代码视窗 + diff
 - 工具执行必须：超时、异常返回错误文本（不阻断 Agent 循环）、限制工作目录
 
 ### 通信层 (`src/api/`)
